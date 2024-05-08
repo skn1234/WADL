@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Registration and List</title>
+    <!-- Include Bootstrap for basic styling -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom styles for toggling sections -->
+    <style>
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation buttons to switch between sections -->
+        <div class="d-flex justify-content-between my-3">
+            <button id="show-register" class="btn btn-primary">Home</button>
+            <button id="show-users" class="btn btn-secondary">View Users</button>
+        </div>
+
+        <!-- Registration Form Section -->
+        <div id="registration-section">
+            <h1>Register</h1>
+            <form id="registration-form">
+                <div class="form-group">
+                    <label for="username">Username:</label>
+                    <input type="text" class="form-control" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email:</label>
+                    <input type="email" class="form-control" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password:</label>
+                    <input type="password" class="form-control" id="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+        </div>
+
+        <!-- User List Section -->
+        <div id="user-list-section" class="hidden">
+            <h1>Registered Users</h1>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Include jQuery for AJAX and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script>
+    $(document).ready(function() {
+        // Function to switch between registration and user list sections
+        function toggleSection(sectionId) {
+            $('#registration-section, #user-list-section').addClass('hidden');
+            $(sectionId).removeClass('hidden');
+        }
+
+        // Event listeners for navigation buttons
+        $('#show-register').click(function() {
+            toggleSection('#registration-section');
+        });
+
+        $('#show-users').click(function() {
+            toggleSection('#user-list-section');
+            populateUserList();
+        });
+
+        // Function to populate the user list from local storage
+        function populateUserList() {
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+
+            $('#user-list').empty(); // Clear previous list
+
+            users.forEach(user => {
+                $('#user-list').append(
+                    `<tr>
+                        <td>${user.username}</td>
+                        <td>${user.email}</td>
+                    </tr>`
+                );
+            });
+        }
+
+        // Handle registration form submission
+        $('#registration-form').on('submit', function(event) {
+            event.preventDefault();
+
+            // Collect form data
+            const username = $('#username').val();
+            const email = $('#email').val();
+            const password = $('#password').val();
+
+            // Create a new user object
+            const user = {
+                username,
+                email,
+                password
+            };
+
+            // Store user data in local storage
+            let users = JSON.parse(localStorage.getItem('users')) || [];
+            users.push(user);
+            localStorage.setItem('users', JSON.stringify(users));
+
+            // AJAX POST request to send user data to server (dummy endpoint)
+            $.ajax({
+                type: 'POST',
+                url: 'http://localhost:3000/api/register', // Local development server
+
+                data: JSON.stringify(user),
+                contentType: 'application/json',
+                success: function(response) {
+                    console.log('User registered:', response);
+                },
+                error: function(error) {
+                    console.error('Error during registration:', error);
+                }
+            });
+
+            // Clear form fields
+            $('#registration-form').trigger('reset');
+
+            // Switch to user list section to display newly registered users
+            toggleSection('#user-list-section');
+            populateUserList();
+        });
+    });
+    </script>
+</body>
+</html>
